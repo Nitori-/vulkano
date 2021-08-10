@@ -214,8 +214,9 @@ fn main() {
     #[derive(Default, Debug, Clone)]
     struct Vertex {
         position: [f32; 2],
+        color: [u8; 3] // --- We want to use a UNorm format for this attribute ---
     }
-    vulkano::impl_vertex!(Vertex, position);
+    vulkano::impl_vertex!(Vertex, position, color);
 
     let vertex_buffer = CpuAccessibleBuffer::from_iter(
         device.clone(),
@@ -224,12 +225,15 @@ fn main() {
         [
             Vertex {
                 position: [-0.5, -0.25],
+                color: [255, 0, 0],
             },
             Vertex {
                 position: [0.0, 0.5],
+                color: [0, 255, 0],
             },
             Vertex {
                 position: [0.25, -0.1],
+                color: [0, 0, 255],
             },
         ]
         .iter()
@@ -252,9 +256,13 @@ fn main() {
 				#version 450
 
 				layout(location = 0) in vec2 position;
+				layout(location = 1) in vec3 color;
+
+				layout(location = 0) out vec3 v_color;
 
 				void main() {
 					gl_Position = vec4(position, 0.0, 1.0);
+                    v_color = color;
 				}
 			"
         }
@@ -266,10 +274,12 @@ fn main() {
             src: "
 				#version 450
 
+				layout(location = 0) in vec3 v_color;
+
 				layout(location = 0) out vec4 f_color;
 
 				void main() {
-					f_color = vec4(1.0, 0.0, 0.0, 1.0);
+					f_color = vec4(v_color, 1.0);
 				}
 			"
         }
